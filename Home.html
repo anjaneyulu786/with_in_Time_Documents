@@ -1,0 +1,170 @@
+<div class="modal fade" id="modal-default" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4>Create Appointment</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span></button>
+            </div>
+            <div class="modal-body">
+                <!-- /.Appointment Title-->
+                <div id="successMess" class="form-group" style="display:none;color:green;">
+                    <div class="alert alert-success alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <h5><i class="icon fa fa-check "></i> Success! your appointment scheduled</h5>
+                    </div>
+                </div>
+                <div id="errorMess" class="form-group" style="display:none;color:red;">
+                    <div class="alert alert-danger alert-dismissible">
+                        <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                        <h5><i class="icon fa fa-ban"></i> Error! Please check your appointment details.</h5>
+                    </div>
+                </div>
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"><i class="fa fa-address-card"></i></span>
+                    </div>
+                    <input type="text" id="title" class="form-control" placeholder="Appointment Title">
+                </div>
+                <!-- /.Appointment Start and end date-->
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fa fa-clock-o"></i></span>
+                        </div>
+                        <input type="text" class="form-control float-right" id="appointmentDateRange"
+                            placeholder="Appointment Start and End Date">
+                    </div>
+                    <!-- /.input group -->
+                </div>
+                <!-- /.Appointment Name -->
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"><i class="fa fa-handshake-o"></i></span>
+                    </div>
+                    <input type="text" id="aptName" class="form-control" placeholder="Appointee Name">
+                </div>
+                <!-- /.Appointment Phone -->
+                <div class="form-group">
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fa fa-phone"></i></span>
+                        </div>
+                        <!-- <input id="mobileNumber" class="form-control" type="text" placeholder="Mobile Number" data-role="tagsinput" style="display: none;"> -->
+
+                        <input type="text" id="aptPhone" placeholder="Appointee Phone" class="form-control"
+                            data-inputmask='"mask": "+919999999999"'>
+                    </div>
+                    <!-- /.input group -->
+                </div>
+                <!-- /.Appointment Description -->
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text"><i class="fa fa-sticky-note"></i></span>
+                    </div>
+                    <textarea id="aptDesc" class="form-control" placeholder="Description" />
+                    </div>
+                  <!-- /.Appointer Email -->
+                  <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text"><i class="fa fa-envelope"></i></span>
+                    </div>
+                    <input type="email" id="aptEmail" class="form-control" placeholder="Appointee Email">
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+                  <input type="button"  id="submitButton" class="btn btn-success" value="Submit" />
+                </div>
+              </div>
+              <!-- /.modal-content -->
+            </div>
+            <!-- /.modal-dialog -->
+</div>
+
+          <script>
+            $("#submitButton").click(function () {
+                formatdate($("#appointmentDateRange").val());
+                var startDate, apptPh;
+                var endDate;
+                var appointment = $("#appointmentDateRange").val();
+                if (appointment != "") {
+                    var date = $("#appointmentDateRange").val().split("-");
+                    var stDt1 = date[0].split(" ");
+                    var stDt2 = stDt1[0].split("/");
+                    var stTime = stDt1[1].split(":");
+                    startDate = stDt2[2] + stDt2[0] + stDt2[1] + stTime[0] + stTime[1];
+                    /* var endDt1 = date[1].split(" ");
+                    var endDt2 = endDt1[1].split("/");
+                    var endTime = endDt1[2].split(":");
+                    endDate = endDt2[2] + endDt2[0] + endDt2[1] + endTime[0] + endTime[1]; */
+                }
+                if ($("#aptPhone").val() != "") {
+                    var ph1 = $("#aptPhone").val().replace("(", "");
+                    var ph2 = ph1.replace(")", "");
+                    apptPh = ph2.replace("-", "");
+                }
+                var startdate = formatdate($("#appointmentDateRange").val())
+                var businessId = $.session.get('businessId');
+                reqHandler.get({ url: '/ui/query/appointmentList?startdate=' + startdate + '&businessId=' + businessId }, function (response) {
+                    console.log("responce  ::::::::", response);
+                    if (response.status == "Success") {
+                        console.log("responce  ::::::::", response.result);
+                        var appointment = {
+                            "userPhone": $.session.get('mobileNumber'),
+                            "emailAddress": $.session.get('emailAddress'),
+                            "title": $("#title").val(),
+                            "startDate": startdate,
+                            "endDate": response.result,
+                            "appointeeName": $("#aptName").val(),
+                            "appointeePhone": apptPh.replace(" ", ""),
+                            "appointeeEmail": $("#aptEmail").val(),
+                            "description": $("#aptDesc").val(),
+                            "status": "Scheduled"
+                        };
+                        reqHandler.post({ url: "/ui/appointment", data: appointment }, function (resp) {
+                            if (resp.status == "Success") {
+                                $("#successMess").css("display", "block");
+                                $("#successMess").html(resp.result[0]);
+                                setTimeout(function () {
+                                    $("#successMess").css("display", "none");
+                                    $('#modal-default').modal('hide');
+                                    location.reload();
+                                }, 3000);
+                            } else {
+                                $("#errorMess").css("display", "block");
+                                $("#errorMess").html(resp.error[0]);
+                                setTimeout(function () { $("#errorMess").css("display", "none"); }, 3000);
+                            }
+                        });
+                    } else {
+                        alert("Error :: Appointments are over limt ", response.status);
+                    }
+                });
+            });
+
+            function formatdate(date) {
+                console.log(date)
+                var dt = new Date(date);
+
+                var month = dt.getMonth() + 1;
+                month = (month < 10) ? ("0" + month) : month;
+
+                var day = dt.getDate();
+                day = (day < 10) ? ("0" + day) : day;
+
+                var year = dt.getFullYear();
+
+                var hours = dt.getHours();
+                hours = (hours < 10) ? ("0" + hours) : hours;
+
+                var minutes = dt.getMinutes();
+                minutes = (minutes < 10) ? ("0" + minutes) : minutes;
+
+                var seconds = dt.getSeconds();
+                seconds = (seconds < 10) ? ("0" + seconds) : seconds;
+                var finalDate = year + "" + month + day + hours + minutes + seconds;
+
+                return finalDate;
+            }
+        </script>
