@@ -127,13 +127,6 @@ function create(appointment, callback) {
 		};
 		errorList.push(e);
 	}
-	// if (!appointmentAPI.getEndDate()) {
-	//    	var e = {
-	// 			status: VALIDATE.FAIL,
-	// 			error: utils.formatText(VALIDATE.REQUIRED, 'endDate')
-	// 	};
-	// 	errorList.push(e);
-	// }
 	if (!appointmentAPI.getAppointeeName()) {
 		var e = {
 			status: VALIDATE.FAIL,
@@ -476,7 +469,6 @@ function getBusinessAppointments(businessId, callback) {
 	var appointments = [];
 	var query = { 'createdBy': businessId };
 	getList(query, function (response) {
-		console.log("Inside API code ::::::::::::")
 		if (response.error) {
 			callback(response);
 			return;
